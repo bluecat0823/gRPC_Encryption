@@ -30,7 +30,12 @@ class EncryptionClient:
 
     def exchange_key(self):
         # **공개 키**를 PEM 형식으로 변환하여 전송
+        # Correctly send the public key
         public_key_pem = self.public_key.save_pkcs1(format='PEM').decode('utf-8')
+        response = self.stub.ExchangeKey(
+            encryption_pb2.KeyExchangeRequest(client_public_key=public_key_pem)
+        )
+
         print(f"Sending Public Key:\n{public_key_pem}")  # 디버깅용 출력
         try:
             # 서버로 공개 키 전송 및 대칭 키 수신
