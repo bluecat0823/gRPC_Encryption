@@ -3,9 +3,8 @@ import grpc
 import encryption_pb2
 import encryption_pb2_grpc
 import rsa
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-import os
 import base64
+import os
 
 KEY_STORE = {}
 
@@ -14,11 +13,15 @@ def generate_or_load_keys(private_key_path, public_key_path):
         with open(private_key_path, "rb") as priv_file, open(public_key_path, "rb") as pub_file:
             private_key = rsa.PrivateKey.load_pkcs1(priv_file.read())
             public_key = rsa.PublicKey.load_pkcs1(pub_file.read())
+        print("Loaded existing keys:")
     else:
         private_key, public_key = rsa.newkeys(2048)
         with open(private_key_path, "wb") as priv_file, open(public_key_path, "wb") as pub_file:
             priv_file.write(private_key.save_pkcs1())
             pub_file.write(public_key.save_pkcs1())
+        print("Generated new keys:")
+    print(f"Private Key: {private_key.save_pkcs1(format='PEM').decode('utf-8')}")
+    print(f"Public Key: {public_key.save_pkcs1(format='PEM').decode('utf-8')}")
     return private_key, public_key
 
 class EncryptionServiceServicer(encryption_pb2_grpc.EncryptionServiceServicer):
@@ -29,16 +32,11 @@ class EncryptionServiceServicer(encryption_pb2_grpc.EncryptionServiceServicer):
         self.server_private_key, self.server_public_key = generate_or_load_keys(
             private_key_path, public_key_path
         )
-        self.admin_token = "secure_admin_token"
-
-    def _generate_symmetric_key(self):
-        return os.urandom(32)
 
     def ExchangeKey(self, request, context):
         try:
-            # 클라이언트에서 전송된 공개 키를 로드
             client_public_key = rsa.PublicKey.load_pkcs1(request.client_public_key.encode('utf-8'))
-            symmetric_key = self._generate_symmetric_key()
+            symmetric_key = os.urandom(32)
             encrypted_symmetric_key = rsa.encrypt(symmetric_key, client_public_key)
             KEY_STORE[context.peer()] = symmetric_key
             return encryption_pb2.KeyExchangeResponse(
@@ -46,20 +44,6 @@ class EncryptionServiceServicer(encryption_pb2_grpc.EncryptionServiceServicer):
             )
         except Exception as e:
             context.abort(grpc.StatusCode.UNKNOWN, f"Key exchange failed: {e}")
-
-    def EncryptMessage(self, request, context):
-        symmetric_key = KEY_STORE.get(context.peer())
-        if not symmetric_key:
-            context.abort(grpc.StatusCode.UNAUTHENTICATED, "Key not found for peer.")
-        encrypted_message = base64.b64encode(request.plaintext.encode()).decode('utf-8')
-        return encryption_pb2.EncryptResponse(encrypted_message=encrypted_message)
-
-    def DecryptMessage(self, request, context):
-        symmetric_key = KEY_STORE.get(context.peer())
-        if not symmetric_key:
-            context.abort(grpc.StatusCode.UNAUTHENTICATED, "Key not found for peer.")
-        decrypted_message = base64.b64decode(request.encrypted_message.encode()).decode('utf-8')
-        return encryption_pb2.DecryptResponse(plaintext=decrypted_message)
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
