@@ -32,6 +32,7 @@ class EncryptionClient:
 
     def exchange_key(self):
         public_key_pem = self.public_key.save_pkcs1(format='PEM').decode('utf-8')
+        print(f"Sending Public Key:\n{public_key_pem}")
         response = self.stub.ExchangeKey(
             encryption_pb2.KeyExchangeRequest(client_public_key=public_key_pem)
         )
