@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+service EncryptionService {
+  rpc ExchangeKey(KeyExchangeRequest) returns (KeyExchangeResponse);
+  rpc EncryptMessage(EncryptRequest) returns (EncryptResponse);
+  rpc DecryptMessage(DecryptRequest) returns (DecryptResponse);
+  rpc RegenerateKey(KeyRegenerationRequest) returns (KeyExchangeResponse);
+  rpc ResetKeys(ResetKeysRequest) returns (ResetKeysResponse);
+}
+
+message KeyExchangeRequest {
+  string client_public_key = 1; // 클라이언트의 RSA 공개 키
+}
+
+message KeyExchangeResponse {
+  string encrypted_symmetric_key = 1; // 서버의 AES 키를 RSA로 암호화한 값
+}
+
+message EncryptRequest {
+  string plaintext = 1; // 암호화할 메시지
+}
+
+message EncryptResponse {
+  string encrypted_message = 1; // 암호화된 메시지
+}
+
+message DecryptRequest {
+  string encrypted_message = 1; // 복호화할 메시지
+}
+
+message DecryptResponse {
+  string plaintext = 1; // 복호화된 메시지
+}
+
+message KeyRegenerationRequest {
+  string client_public_key = 1; // 클라이언트의 RSA 공개 키
+}
+
+message ResetKeysRequest {
+  string admin_token = 1; // 관리자의 인증 토큰
+}
+
+message ResetKeysResponse {
+  bool success = 1; // 키 재설정 성공 여부
+  string message = 2; // 추가 정보
+}
