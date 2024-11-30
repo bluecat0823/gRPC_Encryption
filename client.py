@@ -27,27 +27,22 @@ class EncryptionClient:
         self.symmetric_key = None
 
     def exchange_key(self):
-        # **공개 키**를 PEM 형식으로 변환
         public_key_pem = self.public_key.save_pkcs1(format='PEM').decode('utf-8')
-        print("Sending Public Key:\n", public_key_pem)  # 디버깅용 출력
         response = self.stub.ExchangeKey(
             encryption_pb2.KeyExchangeRequest(client_public_key=public_key_pem)
         )
         encrypted_key = base64.b64decode(response.encrypted_symmetric_key)
         self.symmetric_key = rsa.decrypt(encrypted_key, self.private_key)
-        print("Symmetric key exchanged successfully!")
 
     def encrypt_message(self, message):
         if not self.symmetric_key:
             raise ValueError("Symmetric key not established. Call exchange_key first.")
-        print(f"Encrypting message: {message}")
         encrypted_message = base64.b64encode(message.encode()).decode('utf-8')
         return encrypted_message
 
     def decrypt_message(self, encrypted_message):
         if not self.symmetric_key:
             raise ValueError("Symmetric key not established. Call exchange_key first.")
-        print(f"Decrypting message: {encrypted_message}")
         decrypted_message = base64.b64decode(encrypted_message.encode()).decode('utf-8')
         return decrypted_message
 
@@ -58,3 +53,4 @@ if __name__ == "__main__":
     print("Encrypted message:", encrypted)
     decrypted = client.decrypt_message(encrypted)
     print("Decrypted message:", decrypted)
+
