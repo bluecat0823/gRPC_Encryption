@@ -28,52 +28,32 @@ class EncryptionClient:
 
     def exchange_key(self):
         public_key_pem = self.public_key.save_pkcs1().decode('utf-8')
+        print("Sending Public Key:\n", public_key_pem)  # 디버깅용 출력
         response = self.stub.ExchangeKey(
             encryption_pb2.KeyExchangeRequest(client_public_key=public_key_pem)
         )
-
         encrypted_key = base64.b64decode(response.encrypted_symmetric_key)
         self.symmetric_key = rsa.decrypt(encrypted_key, self.private_key)
         print("Symmetric key exchanged successfully!")
 
-
     def encrypt_message(self, message):
-        response = self.stub.EncryptMessage(encryption_pb2.EncryptRequest(plaintext=message))
-        print(f"Encrypted Message: {response.encrypted_message}")
-        return response.encrypted_message
+        if not self.symmetric_key:
+            raise ValueError("Symmetric key not established. Call exchange_key first.")
+        print(f"Encrypting message: {message}")
+        encrypted_message = base64.b64encode(message.encode()).decode('utf-8')
+        return encrypted_message
 
     def decrypt_message(self, encrypted_message):
-        response = self.stub.DecryptMessage(
-            encryption_pb2.DecryptRequest(encrypted_message=encrypted_message)
-        )
-        print(f"Decrypted Message: {response.plaintext}")
-        return response.plaintext
-
-    def regenerate_key(self):
-        response = self.stub.RegenerateKey(
-            encryption_pb2.KeyRegenerationRequest(
-                client_public_key=self.public_key.save_pkcs1().decode()
-            )
-        )
-        encrypted_key = base64.b64decode(response.encrypted_symmetric_key)
-        self.symmetric_key = rsa.decrypt(encrypted_key, self.private_key)
-        print("Symmetric key regenerated successfully!")
-
-    def reset_keys(self, admin_token):
-        response = self.stub.ResetKeys(
-            encryption_pb2.ResetKeysRequest(admin_token=admin_token)
-        )
-        if response.success:
-            print(f"Keys reset successfully: {response.message}")
-            self.exchange_key()
-        else:
-            print(f"Failed to reset keys: {response.message}")
-
+        if not self.symmetric_key:
+            raise ValueError("Symmetric key not established. Call exchange_key first.")
+        print(f"Decrypting message: {encrypted_message}")
+        decrypted_message = base64.b64decode(encrypted_message.encode()).decode('utf-8')
+        return decrypted_message
 
 if __name__ == "__main__":
     client = EncryptionClient("localhost:50051")
     client.exchange_key()
     encrypted = client.encrypt_message("Hello, gRPC!")
-    client.decrypt_message(encrypted)
-    client.regenerate_key()
-    client.reset_keys("secure_admin_token")
+    print("Encrypted message:", encrypted)
+    decrypted = client.decrypt_message(encrypted)
+    print("Decrypted message:", decrypted)
