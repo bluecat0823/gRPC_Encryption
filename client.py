@@ -31,8 +31,9 @@ class EncryptionClient:
         self.symmetric_key = None
 
     def exchange_key(self):
+        # 공개 키를 PEM 형식으로 변환
         public_key_pem = self.public_key.save_pkcs1(format='PEM').decode('utf-8')
-        print(f"Sending Public Key:\n{public_key_pem}")
+        print(f"Sending Public Key:\n{public_key_pem}")  # 디버깅용 출력
         response = self.stub.ExchangeKey(
             encryption_pb2.KeyExchangeRequest(client_public_key=public_key_pem)
         )
@@ -59,3 +60,4 @@ if __name__ == "__main__":
     print("Encrypted message:", encrypted)
     decrypted = client.decrypt_message(encrypted)
     print("Decrypted message:", decrypted)
+
