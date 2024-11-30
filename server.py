@@ -36,9 +36,11 @@ class EncryptionServiceServicer(encryption_pb2_grpc.EncryptionServiceServicer):
     def ExchangeKey(self, request, context):
         try:
             client_public_key = rsa.PublicKey.load_pkcs1(request.client_public_key.encode('utf-8'))
+            print(f"Received Public Key:\n{request.client_public_key}")
             symmetric_key = os.urandom(32)
             encrypted_symmetric_key = rsa.encrypt(symmetric_key, client_public_key)
             KEY_STORE[context.peer()] = symmetric_key
+            print(f"Symmetric Key for {context.peer()} set.")
             return encryption_pb2.KeyExchangeResponse(
                 encrypted_symmetric_key=base64.b64encode(encrypted_symmetric_key).decode('utf-8')
             )
