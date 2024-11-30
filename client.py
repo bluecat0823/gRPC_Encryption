@@ -60,4 +60,3 @@ if __name__ == "__main__":
     print("Encrypted message:", encrypted)
     decrypted = client.decrypt_message(encrypted)
     print("Decrypted message:", decrypted)
-
