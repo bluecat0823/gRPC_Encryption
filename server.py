@@ -58,13 +58,19 @@ class EncryptionServiceServicer(encryption_pb2_grpc.EncryptionServiceServicer):
         return decryptor.update(encrypted) + decryptor.finalize()
 
     def ExchangeKey(self, request, context):
-        client_public_key = rsa.PublicKey.load_pkcs1(request.client_public_key.encode())
-        symmetric_key = self._generate_symmetric_key()
-        encrypted_symmetric_key = rsa.encrypt(symmetric_key, client_public_key)
-        KEY_STORE[context.peer()] = symmetric_key
-        return encryption_pb2.KeyExchangeResponse(
-            encrypted_symmetric_key=base64.b64encode(encrypted_symmetric_key).decode()
-        )
+        try:
+            client_public_key = rsa.PublicKey.load_pkcs1(request.client_public_key.encode('utf-8'))
+            symmetric_key = self._generate_symmetric_key()
+
+            encrypted_symmetric_key = rsa.encrypt(symmetric_key, client_public_key)
+            KEY_STORE[context.peer()] = symmetric_key
+
+            return encryption_pb2.KeyExchangeResponse(
+                encrypted_symmetric_key=base64.b64encode(encrypted_symmetric_key).decode('utf-8')
+            )
+        except Exception as e:
+            context.abort(grpc.StatusCode.UNKNOWN, f"Key exchange failed: {e}")
+
 
     def EncryptMessage(self, request, context):
         symmetric_key = KEY_STORE.get(context.peer())
