@@ -4,44 +4,28 @@ service EncryptionService {
   rpc ExchangeKey(KeyExchangeRequest) returns (KeyExchangeResponse);
   rpc EncryptMessage(EncryptRequest) returns (EncryptResponse);
   rpc DecryptMessage(DecryptRequest) returns (DecryptResponse);
-  rpc ResetKeys(ResetKeysRequest) returns (ResetKeysResponse);
 }
 
 message KeyExchangeRequest {
-  string client_public_key = 1; // 클라이언트의 RSA 공개 키
-  bool regenerate = 2;         // 키 재생성 여부 (true: 새로운 키 생성, false: 기존 키 재사용)
+  string client_public_key = 1; // Client's RSA public key
 }
 
 message KeyExchangeResponse {
-  string encrypted_symmetric_key = 1; // 서버의 AES 키를 RSA로 암호화한 값
-  int32 status_code = 2;              // 상태 코드 (0: 성공, 1: 실패)
-  string message = 3;                 // 상태 메시지
+  string encrypted_symmetric_key = 1; // Encrypted AES key using RSA
 }
 
 message EncryptRequest {
-  string plaintext = 1; // 암호화할 메시지
+  string plaintext = 1; // Message to encrypt
 }
 
 message EncryptResponse {
-  string encrypted_message = 1; // 암호화된 메시지
+  string encrypted_message = 1; // Encrypted message
 }
 
 message DecryptRequest {
-  string encrypted_message = 1; // 복호화할 메시지
+  string encrypted_message = 1; // Message to decrypt
 }
 
 message DecryptResponse {
-  string plaintext = 1; // 복호화된 메시지
-}
-
-message ResetKeysRequest {
-  string admin_token = 1; // 관리자의 인증 토큰
-  string client_id = 2;   // 클라이언트 ID
-  string ip_address = 3;  // 요청자의 IP 주소
-}
-
-message ResetKeysResponse {
-  bool success = 1;        // 키 재설정 성공 여부
-  string message = 2;      // 추가 정보
-  int32 error_code = 3;    // 오류 코드 (0: 성공, 1: 인증 실패 등)
+  string plaintext = 1; // Decrypted message
 }
