@@ -27,14 +27,15 @@ class EncryptionClient:
         self.symmetric_key = None
 
     def exchange_key(self):
+        public_key_pem = self.public_key.save_pkcs1().decode('utf-8')
         response = self.stub.ExchangeKey(
-            encryption_pb2.KeyExchangeRequest(
-                client_public_key=self.public_key.save_pkcs1().decode()
-            )
+            encryption_pb2.KeyExchangeRequest(client_public_key=public_key_pem)
         )
+
         encrypted_key = base64.b64decode(response.encrypted_symmetric_key)
         self.symmetric_key = rsa.decrypt(encrypted_key, self.private_key)
         print("Symmetric key exchanged successfully!")
+
 
     def encrypt_message(self, message):
         response = self.stub.EncryptMessage(encryption_pb2.EncryptRequest(plaintext=message))
