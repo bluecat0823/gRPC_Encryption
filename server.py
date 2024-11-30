@@ -36,7 +36,6 @@ class EncryptionServiceServicer(encryption_pb2_grpc.EncryptionServiceServicer):
 
     def ExchangeKey(self, request, context):
         try:
-            print("Received Public Key:\n", request.client_public_key)  # 디버깅용 출력
             client_public_key = rsa.PublicKey.load_pkcs1(request.client_public_key.encode('utf-8'))
             symmetric_key = self._generate_symmetric_key()
             encrypted_symmetric_key = rsa.encrypt(symmetric_key, client_public_key)
@@ -65,7 +64,6 @@ def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     encryption_pb2_grpc.add_EncryptionServiceServicer_to_server(EncryptionServiceServicer(), server)
     server.add_insecure_port("[::]:50051")
-    print("Server started at [::]:50051")
     server.start()
     server.wait_for_termination()
 
