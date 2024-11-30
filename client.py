@@ -29,7 +29,7 @@ class EncryptionClient:
         self.symmetric_key = None
 
     def exchange_key(self):
-        # 공개 키를 PEM 형식으로 변환하여 전송
+        # **공개 키**를 PEM 형식으로 변환하여 전송
         public_key_pem = self.public_key.save_pkcs1(format='PEM').decode('utf-8')
         print(f"Sending Public Key:\n{public_key_pem}")  # 디버깅용 출력
         try:
