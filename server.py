@@ -65,6 +65,7 @@ def serve():
     encryption_pb2_grpc.add_EncryptionServiceServicer_to_server(EncryptionServiceServicer(), server)
     server.add_insecure_port("[::]:50051")
     server.start()
+    print("Server started at [::]:50051")
     server.wait_for_termination()
 
 if __name__ == "__main__":
