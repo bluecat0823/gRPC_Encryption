@@ -27,12 +27,14 @@ class EncryptionClient:
         self.symmetric_key = None
 
     def exchange_key(self):
-        public_key_pem = self.public_key.save_pkcs1(format='PEM').decode('utf-8')
-        response = self.stub.ExchangeKey(
-            encryption_pb2.KeyExchangeRequest(client_public_key=public_key_pem)
-        )
-        encrypted_key = base64.b64decode(response.encrypted_symmetric_key)
-        self.symmetric_key = rsa.decrypt(encrypted_key, self.private_key)
+    # 공개 키를 PEM 형식으로 변환
+    public_key_pem = self.public_key.save_pkcs1(format='PEM').decode('utf-8')
+    response = self.stub.ExchangeKey(
+        encryption_pb2.KeyExchangeRequest(client_public_key=public_key_pem)
+    )
+    encrypted_key = base64.b64decode(response.encrypted_symmetric_key)
+    self.symmetric_key = rsa.decrypt(encrypted_key, self.private_key)
+
 
     def encrypt_message(self, message):
         if not self.symmetric_key:
