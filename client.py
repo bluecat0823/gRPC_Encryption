@@ -34,12 +34,18 @@ class EncryptionClient:
         # 공개 키를 PEM 형식으로 변환
         public_key_pem = self.public_key.save_pkcs1(format='PEM').decode('utf-8')
         print(f"Sending Public Key:\n{public_key_pem}")  # 디버깅용 출력
-        response = self.stub.ExchangeKey(
-            encryption_pb2.KeyExchangeRequest(client_public_key=public_key_pem)
-        )
-        encrypted_key = base64.b64decode(response.encrypted_symmetric_key)
-        self.symmetric_key = rsa.decrypt(encrypted_key, self.private_key)
-        print("Symmetric key successfully exchanged!")
+        try:
+            # 서버로 공개 키 전송 및 대칭 키 수신
+            response = self.stub.ExchangeKey(
+                encryption_pb2.KeyExchangeRequest(client_public_key=public_key_pem)
+            )
+            encrypted_key = base64.b64decode(response.encrypted_symmetric_key)
+            self.symmetric_key = rsa.decrypt(encrypted_key, self.private_key)
+            print("Symmetric key successfully exchanged!")
+        except Exception as e:
+            print(f"Error during key exchange: {e}")
+        raise
+
 
     def encrypt_message(self, message):
         if not self.symmetric_key:
