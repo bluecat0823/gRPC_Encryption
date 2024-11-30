@@ -46,6 +46,14 @@ class EncryptionServiceServicer(encryption_pb2_grpc.EncryptionServiceServicer):
             )
         except Exception as e:
             context.abort(grpc.StatusCode.UNKNOWN, f"Key exchange failed: {e}")
+            # Load and validate the received public key on the server
+        try:
+            client_public_key = rsa.PublicKey.load_pkcs1(request.client_public_key.encode('utf-8'))
+        except ValueError as e:
+            context.set_details(f"Key exchange failed: {str(e)}")
+            context.set_code(grpc.StatusCode.UNKNOWN)
+            return encryption_pb2.KeyExchangeResponse()
+
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
