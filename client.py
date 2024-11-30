@@ -3,6 +3,7 @@ import encryption_pb2
 import encryption_pb2_grpc
 import rsa
 import base64
+import os
 
 def generate_or_load_keys(private_key_path, public_key_path):
     if os.path.exists(private_key_path) and os.path.exists(public_key_path):
